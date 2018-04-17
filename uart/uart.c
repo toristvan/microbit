@@ -3,6 +3,8 @@
 #include <stdint.h>
 
 #define UART ((NRF_UART_REG*)0x40002000)
+#define BAUD9600 (0x00275000) 
+#define DISCONNECT (0xFFFFFFFF)
 
 typedef struct{
   volatile uint32_t STARTRX;
@@ -40,4 +42,38 @@ typedef struct{
   volatile uint32_t BAUDRATE;
   volatile uint32_t RESERVED10[17];
   volatile uint32_t CONFIG;
+} NRF_UART_REG;
+
+void uart_init(){
+	GPIO->DIRSET=(1<<24);
+	GPIO->DIRCLR=(1<<25);
+
+	UART->PSELTXD=24;
+	UART->PSELRXD=25;
+
+	UART->BAUDRATE=BAUD9600;
+
+	UART->PSELCTS=DISCONNECT;
+	UART->PSELRTS=DISCONNECT;
+
+	UART->ENABLE=0x4;
+	UART->STARTRX=0x1;
+}
+
+void uart_send(char letter){
+	UART->STARTTX=0x1;
+	UART->TXDRDY=0x0;
+	UART->TXD=letter;
+	while (!UART->TXDRDY){};
+	UART->STOPTX=0x1;
+}
+
+char uart_read(){
+	char ret='\0';
+	if(UART->RXDRDY){
+		UART->STARTRX=0x1;
+		ret=UART->RXD;
+		UART->STOPRX=0x1;
+	}
+	return ret;
 }
