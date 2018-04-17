@@ -61,10 +61,11 @@ void uart_init(){
 }
 
 void uart_send(char letter){
-	UART->STARTTX=0x1;
-	UART->TXDRDY=0x0;
+  UART->TXDRDY=0x0;
+  UART->STARTTX=0x1;
 	UART->TXD=letter;
 	while (!UART->TXDRDY){};
+  UART->TXDRDY=0x0;
 	UART->STOPTX=0x1;
 }
 
